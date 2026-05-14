@@ -9,7 +9,11 @@ from dotenv import load_dotenv
 
 sys.path.append(str(Path(__file__).resolve().parents[1]))
 
-from workers.celery_config import celery_app
+from celery import Celery
+
+
+celery_app = Celery("resume_parser")
+celery_app.config_from_object("workers.celery_config")
 
 
 def get_redis_url() -> str:
