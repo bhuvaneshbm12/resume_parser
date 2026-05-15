@@ -32,9 +32,15 @@ def extract_pdf_text(contents: bytes) -> str:
 
 @router.post("/parse", status_code=status.HTTP_202_ACCEPTED)
 async def parse_resume(
-    file: UploadFile = File(...),
+    file: UploadFile | None = File(None),
     connection: Connection = Depends(get_connection),
 ) -> dict[str, str]:
+    if file is None:
+        raise HTTPException(
+            status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+            detail="no file provided",
+        )
+
     if file.content_type != "application/pdf":
         raise HTTPException(
             status_code=status.HTTP_400_BAD_REQUEST,
@@ -76,7 +82,7 @@ async def get_results(
     )
 
     if resume is None:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Task not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="task not found")
 
     if resume["status"] != "done":
         return {"status": resume["status"]}

@@ -16,3 +16,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="Resume Parser API", lifespan=lifespan)
 app.include_router(parse_router)
+
+
+@app.get("/health")
+async def health() -> dict[str, str]:
+    return {"status": "ok"}
