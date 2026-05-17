@@ -4,9 +4,9 @@ export type ParsedResumeResult = {
   status: string;
   name?: string;
   email?: string;
-  skills?: string[];
-  experience?: object[];
-  education?: object[];
+  skills?: string[] | string;
+  experience?: Record<string, unknown>[];
+  education?: Record<string, unknown>[];
 };
 
 export async function uploadResume(file: File): Promise<{ task_id: string }> {
@@ -19,29 +19,29 @@ export async function uploadResume(file: File): Promise<{ task_id: string }> {
   });
 
   if (!response.ok) {
-    throw new Error(await getErrorMessage(response, "Upload failed."));
+    if (response.status === 413) {
+      throw new Error("File too large");
+    }
+    if (response.status === 415) {
+      throw new Error("Only PDFs accepted");
+    }
+    throw new Error("Upload failed");
   }
 
   return response.json();
 }
 
 export async function getResults(taskId: string): Promise<ParsedResumeResult> {
-  const response = await fetch(`${API_URL}/results/${taskId}`, {
+  const response = await fetch(`${API_URL}/results/${encodeURIComponent(taskId)}`, {
     cache: "no-store",
   });
 
   if (!response.ok) {
-    throw new Error(await getErrorMessage(response, "Could not load results."));
+    if (response.status === 404) {
+      throw new Error("Result not found");
+    }
+    throw new Error("Could not load results");
   }
 
   return response.json();
-}
-
-async function getErrorMessage(response: Response, fallback: string): Promise<string> {
-  try {
-    const body = (await response.json()) as { detail?: string; error?: string };
-    return body.detail || body.error || fallback;
-  } catch {
-    return fallback;
-  }
 }

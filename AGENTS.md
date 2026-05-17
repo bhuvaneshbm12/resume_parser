@@ -348,6 +348,16 @@ Frontend API/CORS notes:
 - `next.config.js` exposes `NEXT_PUBLIC_API_URL` through `env`.
 - Docker Compose sets frontend `NEXT_PUBLIC_API_URL=http://localhost:8000`, which is correct for browser-side calls from the user’s machine.
 
+Recent frontend updates:
+- `frontend/lib/api.ts` now exposes `uploadResume(file)` for `POST /parse` and `getResults(taskId)` for `GET /results/{taskId}`. Upload errors are normalized to `File too large` for 413, `Only PDFs accepted` for 415, and `Upload failed` otherwise. Unknown result ids throw `Result not found`.
+- `frontend/components/UploadForm.tsx` shows the selected filename, disables the upload button while uploading, displays `Uploading...`, redirects to `/results/{taskId}` on success, and shows API error messages in a red box.
+- `frontend/components/ResultsDisplay.tsx` polls immediately and every 3 seconds, clears intervals on completion/unmount, renders pending/processing with a spinner, and renders request failures or backend `failed` status as the red failed card with a retry button.
+- `ResultsDisplay` defensively handles `skills` returned either as a JSON array or as a JSON string, because asyncpg/jsonb behavior can vary.
+- The results card uses shadcn-style `Card`, `Badge`, and local `Separator` components, with contact, skills, experience, and education sections.
+- `frontend/components/ui/separator.tsx` is a local shadcn-style separator helper.
+- `frontend/app/results/[taskId]/page.tsx` stringifies the route param and includes a back button linking to `/`.
+- `npm.cmd run build` passed after these frontend changes. On Windows PowerShell, prefer `npm.cmd` if the `npm.ps1` shim is blocked by execution policy.
+
 ## Docker Compose Notes
 
 Redis healthcheck should stay in exec form:

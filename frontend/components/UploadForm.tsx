@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { ChangeEvent, FormEvent, useState } from "react";
 import { useRouter } from "next/navigation";
 import { uploadResume } from "@/lib/api";
 
@@ -20,7 +20,7 @@ export default function UploadForm() {
     }
 
     if (file.type !== "application/pdf") {
-      setError("Only PDF files are accepted.");
+      setError("Only PDFs accepted");
       return;
     }
 
@@ -35,6 +35,12 @@ export default function UploadForm() {
     }
   }
 
+  function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+    setFile(event.target.files?.[0] ?? null);
+    setError("");
+    setIsUploading(false);
+  }
+
   return (
     <form className="space-y-5" onSubmit={handleSubmit}>
       <label className="block">
@@ -43,8 +49,11 @@ export default function UploadForm() {
           type="file"
           accept="application/pdf,.pdf"
           className="block w-full rounded-md border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 file:mr-4 file:rounded-md file:border-0 file:bg-slate-900 file:px-4 file:py-2 file:text-sm file:font-medium file:text-white hover:file:bg-slate-700"
-          onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+          onChange={handleFileChange}
         />
+        {file ? (
+          <span className="mt-2 block text-sm text-slate-600">Selected: {file.name}</span>
+        ) : null}
       </label>
 
       <button
@@ -55,7 +64,13 @@ export default function UploadForm() {
         {isUploading ? "Uploading..." : "Upload"}
       </button>
 
-      {error ? <p className="text-sm font-medium text-red-600">{error}</p> : null}
+      {isUploading ? <p className="text-sm text-slate-600">Uploading...</p> : null}
+
+      {error ? (
+        <div className="rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm font-medium text-red-700">
+          {error}
+        </div>
+      ) : null}
     </form>
   );
 }
