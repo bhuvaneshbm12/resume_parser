@@ -82,12 +82,20 @@ async def parse_resume(
 
 @router.get("/results/{task_id}")
 async def get_results(
-    task_id: uuid.UUID,
+    task_id: str,
     connection: Connection = Depends(get_connection),
 ) -> dict:
+    try:
+        resume_id = uuid.UUID(task_id)
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="task not found",
+        ) from exc
+
     resume = await connection.fetchrow(
         "SELECT status FROM resumes WHERE id = $1",
-        task_id,
+        resume_id,
     )
 
     if resume is None:
@@ -109,7 +117,7 @@ async def get_results(
         JOIN parsed_fields p ON p.resume_id = r.id
         WHERE r.id = $1
         """,
-        task_id,
+        resume_id,
     )
 
     if row is None:

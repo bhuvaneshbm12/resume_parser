@@ -358,6 +358,13 @@ Recent frontend updates:
 - `frontend/app/results/[taskId]/page.tsx` stringifies the route param and includes a back button linking to `/`.
 - `npm.cmd run build` passed after these frontend changes. On Windows PowerShell, prefer `npm.cmd` if the `npm.ps1` shim is blocked by execution policy.
 
+Recent API and verification updates:
+- `GET /results/{task_id}` accepts the path parameter as `str` and converts valid UUIDs inside the route. Malformed ids such as `fake-id-999` now return HTTP 404 with `{"detail":"task not found"}`, not FastAPI's 422 path validation response.
+- `POST /parse` validation was reconfirmed: non-PDF content types return 415, missing file returns 422, and files over the default 5 MB limit return 413.
+- `verify.sh` now has sectioned colored output, PASS/FAIL counters, `--quick`, frontend health checks, validation checks, a golden path check, DB count check, and API/worker log warnings.
+- `verify.sh` creates temporary validation files with a helper that uses `TMPDIR` only when it exists and is writable, then falls back to `/tmp`, then the current directory.
+- `docker compose restart api` followed by `bash ./verify.sh --quick` passed with 12 PASS and 0 FAIL after the `/results` route fix.
+
 ## Docker Compose Notes
 
 Redis healthcheck should stay in exec form:
@@ -395,7 +402,22 @@ frontend:
   ports:
     - "3000:3000"
   depends_on:
-    - api
+    api:
+      condition: service_healthy
+```
+
+`Dockerfile.api` builds the shared Python runtime image for both `api` and `worker`. It uses `python:3.12-slim`, installs `curl` for the API healthcheck, installs `requirements.txt` at image build time, copies the app, and defaults to running Uvicorn.
+The `api` service builds from `Dockerfile.api` and uses the Dockerfile CMD. It no longer installs Python packages at container startup.
+The `worker` service also builds from `Dockerfile.api` and its command is only `celery -A workers.tasks.celery_app worker --loglevel=info`.
+The `api` service has a healthcheck:
+
+```yaml
+healthcheck:
+  test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+  interval: 10s
+  timeout: 5s
+  retries: 5
+  start_period: 10s
 ```
 
 `frontend/Dockerfile` uses `node:20-alpine`, runs `npm install`, `npm run build`, exposes `3000`, and starts with `npm start`.
