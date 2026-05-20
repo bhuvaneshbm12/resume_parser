@@ -1,0 +1,34 @@
+services:
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    command: uvicorn main:app --host 0.0.0.0 --port ${PORT}
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+      REDIS_URL: ${REDIS_URL:?REDIS_URL is required}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:?GEMINI_API_KEY is required}
+      GEMINI_MODEL: ${GEMINI_MODEL:?GEMINI_MODEL is required}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:?OPENAI_API_KEY is required}
+      ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:?ALLOWED_ORIGINS is required}
+      LOG_LEVEL: ${LOG_LEVEL:?LOG_LEVEL is required}
+      APP_VERSION: ${APP_VERSION:?APP_VERSION is required}
+      PORT: ${PORT:?PORT is required}
+    ports:
+      - "${PORT}:${PORT}"
+
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    command: celery -A workers.tasks worker --loglevel=info
+    restart: unless-stopped
+    environment:
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
+      REDIS_URL: ${REDIS_URL:?REDIS_URL is required}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:?GEMINI_API_KEY is required}
+      GEMINI_MODEL: ${GEMINI_MODEL:?GEMINI_MODEL is required}
+      OPENAI_API_KEY: ${OPENAI_API_KEY:?OPENAI_API_KEY is required}
+      LOG_LEVEL: ${LOG_LEVEL:?LOG_LEVEL is required}
+      APP_VERSION: ${APP_VERSION:?APP_VERSION is required}

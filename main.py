@@ -17,6 +17,12 @@ from routers.parse import router as parse_router
 configure_logging()
 logger = logging.getLogger(__name__)
 APP_VERSION = os.getenv("APP_VERSION", "1.0.0")
+PORT = int(os.environ.get("PORT", 8000))
+ALLOWED_ORIGINS = [
+    origin.strip()
+    for origin in os.environ.get("ALLOWED_ORIGINS", "*").split(",")
+    if origin.strip()
+]
 
 
 class RequestLoggingMiddleware(BaseHTTPMiddleware):
@@ -52,7 +58,7 @@ app = FastAPI(title="Resume Parser API", lifespan=lifespan)
 app.add_middleware(RequestLoggingMiddleware)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=False,
     allow_methods=["*"],
     allow_headers=["*"],
