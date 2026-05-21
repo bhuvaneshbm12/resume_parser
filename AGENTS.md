@@ -40,7 +40,6 @@ Additional app configuration:
 - `LOG_LEVEL`, default `INFO`
 - `MAX_FILE_SIZE_MB`, default `5`
 - `APP_VERSION`, default `1.0.0`
-- `OPENAI_API_KEY` exists in `.env.example` as a future-provider placeholder; current worker code still uses Gemini.
 - Frontend uses `NEXT_PUBLIC_API_URL`, defaulting in code to `http://localhost:8000`.
 
 Use `.env.example` as the template. Never commit `.env`.

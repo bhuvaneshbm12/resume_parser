@@ -10,7 +10,6 @@ services:
       REDIS_URL: ${REDIS_URL:?REDIS_URL is required}
       GEMINI_API_KEY: ${GEMINI_API_KEY:?GEMINI_API_KEY is required}
       GEMINI_MODEL: ${GEMINI_MODEL:?GEMINI_MODEL is required}
-      OPENAI_API_KEY: ${OPENAI_API_KEY:?OPENAI_API_KEY is required}
       ALLOWED_ORIGINS: ${ALLOWED_ORIGINS:?ALLOWED_ORIGINS is required}
       LOG_LEVEL: ${LOG_LEVEL:?LOG_LEVEL is required}
       APP_VERSION: ${APP_VERSION:?APP_VERSION is required}
@@ -29,6 +28,5 @@ services:
       REDIS_URL: ${REDIS_URL:?REDIS_URL is required}
       GEMINI_API_KEY: ${GEMINI_API_KEY:?GEMINI_API_KEY is required}
       GEMINI_MODEL: ${GEMINI_MODEL:?GEMINI_MODEL is required}
-      OPENAI_API_KEY: ${OPENAI_API_KEY:?OPENAI_API_KEY is required}
       LOG_LEVEL: ${LOG_LEVEL:?LOG_LEVEL is required}
       APP_VERSION: ${APP_VERSION:?APP_VERSION is required}
