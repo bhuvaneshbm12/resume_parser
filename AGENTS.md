@@ -364,6 +364,17 @@ Recent API and verification updates:
 - `verify.sh` creates temporary validation files with a helper that uses `TMPDIR` only when it exists and is writable, then falls back to `/tmp`, then the current directory.
 - `docker compose restart api` followed by `bash ./verify.sh --quick` passed with 12 PASS and 0 FAIL after the `/results` route fix.
 
+Recent final-submission updates:
+- `verify.sh` supports `--prod` using Railway API `https://web-production-9d5d8.up.railway.app` and Vercel frontend `https://resume-parser-khaki-theta.vercel.app`; prod mode skips Docker service status and local DB checks.
+- `verify.sh` supports `--ci`, suppressing ANSI colors, section headers, and warnings; it prints per-check PASS/FAIL plus final `OK` or `FAIL`, with exit code 0 only when all critical checks pass.
+- `GET /metrics` in `main.py` returns `total_resumes`, `completed`, `failed`, `pending`, and `average_parse_time_seconds`.
+- `resumes.updated_at` was added to metadata and is created on startup with `ALTER TABLE ... ADD COLUMN IF NOT EXISTS`; `workers/tasks.py` updates it whenever resume status changes.
+- `docker-compose.yml` now persists both Postgres and Redis data with named volumes `postgres_data` and `redis_data`.
+- `frontend/components/ResultsDisplay.tsx` includes a Shadcn `Download JSON` button with a lucide download icon; it saves parsed fields as `resume_parsed.json`.
+- `README.md` was replaced with the final project README covering architecture, setup, environment variables, API usage, verification, deployment URLs, and limitations. It documents Gemini because the code uses `google-genai`.
+- Railway deployment uses `Procfile` to separate `web` and `worker` commands. `railway.json` intentionally does not set a global `startCommand`, so the worker does not start Uvicorn.
+- Railway worker concurrency is capped with `CELERY_CONCURRENCY`, defaulting to 1 in `workers/celery_config.py`; set `CELERY_CONCURRENCY=1` in Railway to avoid high prefork concurrency.
+
 ## Docker Compose Notes
 
 Redis healthcheck should stay in exec form:
