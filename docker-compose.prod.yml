@@ -21,7 +21,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.api
-    command: celery -A workers.tasks worker --loglevel=info
+    command: celery -A workers.tasks worker --loglevel=info --concurrency=${CELERY_CONCURRENCY:-1}
     restart: unless-stopped
     environment:
       DATABASE_URL: ${DATABASE_URL:?DATABASE_URL is required}
@@ -30,3 +30,4 @@ services:
       GEMINI_MODEL: ${GEMINI_MODEL:?GEMINI_MODEL is required}
       LOG_LEVEL: ${LOG_LEVEL:?LOG_LEVEL is required}
       APP_VERSION: ${APP_VERSION:?APP_VERSION is required}
+      CELERY_CONCURRENCY: ${CELERY_CONCURRENCY:-1}
