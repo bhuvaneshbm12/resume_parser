@@ -127,7 +127,7 @@ async def set_resume_status(
     status: str,
 ) -> None:
     await connection.execute(
-        "UPDATE resumes SET status = $1 WHERE id = $2",
+        "UPDATE resumes SET status = $1, updated_at = NOW() WHERE id = $2",
         status,
         resume_id,
     )

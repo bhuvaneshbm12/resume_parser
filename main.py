@@ -9,7 +9,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.responses import JSONResponse
 
-from database import check_database_connection, close_db, connect_db, init_db
+from database import check_database_connection, close_db, connect_db, get_pool, init_db
 from logging_config import configure_logging
 from routers.parse import router as parse_router
 
@@ -81,4 +81,33 @@ async def health() -> dict[str, str]:
         "status": "ok",
         "version": APP_VERSION,
         "timestamp": datetime.now(UTC).isoformat(),
+    }
+
+
+@app.get("/metrics")
+async def metrics() -> dict[str, int | float]:
+    db_pool = await get_pool()
+    async with db_pool.acquire() as connection:
+        row = await connection.fetchrow(
+            """
+            SELECT
+                COUNT(*)::int AS total_resumes,
+                COUNT(*) FILTER (WHERE status = 'done')::int AS completed,
+                COUNT(*) FILTER (WHERE status = 'failed')::int AS failed,
+                COUNT(*) FILTER (WHERE status IN ('pending', 'processing'))::int AS pending,
+                COALESCE(
+                    AVG(EXTRACT(EPOCH FROM updated_at - created_at))
+                        FILTER (WHERE status = 'done'),
+                    0
+                )::float AS average_parse_time_seconds
+            FROM resumes
+            """
+        )
+
+    return {
+        "total_resumes": row["total_resumes"],
+        "completed": row["completed"],
+        "failed": row["failed"],
+        "pending": row["pending"],
+        "average_parse_time_seconds": row["average_parse_time_seconds"],
     }

@@ -107,3 +107,10 @@ async def init_db() -> None:
         for table in metadata.sorted_tables:
             ddl = str(CreateTable(table, if_not_exists=True).compile(dialect=dialect))
             await connection.execute(ddl)
+
+        await connection.execute(
+            """
+            ALTER TABLE resumes
+            ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+            """
+        )

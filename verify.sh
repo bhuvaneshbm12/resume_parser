@@ -7,16 +7,42 @@ PDF_FILE="${PDF_FILE:-test_resume.pdf}"
 POLL_INTERVAL=3
 TIMEOUT_SECONDS=90
 QUICK=0
+PROD=0
+CI=0
 
-if [[ "${1:-}" == "--quick" ]]; then
-  QUICK=1
-fi
+for arg in "$@"; do
+  case "$arg" in
+    --quick)
+      QUICK=1
+      ;;
+    --ci)
+      CI=1
+      ;;
+    --prod)
+      PROD=1
+      API_BASE_URL="https://web-production-9d5d8.up.railway.app"
+      FRONTEND_BASE_URL="https://resume-parser-khaki-theta.vercel.app"
+      ;;
+    *)
+      echo "FAIL: unknown argument $arg"
+      exit 1
+      ;;
+  esac
+done
 
 BOLD_WHITE="\033[1;37m"
 GREEN="\033[0;32m"
 RED="\033[0;31m"
 YELLOW="\033[0;33m"
 RESET="\033[0m"
+
+if (( CI == 1 )); then
+  BOLD_WHITE=""
+  GREEN=""
+  RED=""
+  YELLOW=""
+  RESET=""
+fi
 
 PASS_COUNT=0
 FAIL_COUNT=0
@@ -31,6 +57,9 @@ cleanup() {
 trap cleanup EXIT
 
 section() {
+  if (( CI == 1 )); then
+    return
+  fi
   printf "\n${BOLD_WHITE}=== %s ===${RESET}\n" "$1"
 }
 
@@ -46,6 +75,9 @@ fail() {
 }
 
 warning() {
+  if (( CI == 1 )); then
+    return
+  fi
   printf "${YELLOW}WARNING${RESET}: %s\n" "$1"
 }
 
@@ -150,10 +182,12 @@ section "Checking services"
 check_http_status "API health" "200" "$API_BASE_URL/health"
 check_http_status "Frontend home" "200" "$FRONTEND_BASE_URL"
 
-if (( QUICK == 0 )); then
+if (( QUICK == 0 && PROD == 0 )); then
   for service in api worker redis postgres frontend; do
     check_service_up "$service"
   done
+elif (( PROD == 1 )); then
+  warning "prod mode: skipping docker compose service status checks"
 else
   warning "quick mode: skipping docker compose service status checks"
 fi
@@ -255,7 +289,7 @@ else
   fi
 fi
 
-if (( QUICK == 0 )); then
+if (( QUICK == 0 && PROD == 0 )); then
   section "Checking database"
 
   if [[ "${#COMPOSE_CMD[@]}" -eq 0 ]]; then
@@ -272,6 +306,8 @@ if (( QUICK == 0 )); then
       fail "database has no done resumes"
     fi
   fi
+elif (( PROD == 1 )); then
+  warning "prod mode: skipping database checks"
 else
   warning "quick mode: skipping database checks"
 fi
@@ -303,11 +339,19 @@ else
 fi
 
 section "Summary"
-printf "${GREEN}PASS${RESET}: %s\n" "$PASS_COUNT"
-printf "${RED}FAIL${RESET}: %s\n" "$FAIL_COUNT"
+if (( CI == 0 )); then
+  printf "${GREEN}PASS${RESET}: %s\n" "$PASS_COUNT"
+  printf "${RED}FAIL${RESET}: %s\n" "$FAIL_COUNT"
+fi
 
 if (( CRITICAL_FAILED == 0 )); then
+  if (( CI == 1 )); then
+    echo "OK"
+  fi
   exit 0
 fi
 
+if (( CI == 1 )); then
+  echo "FAIL"
+fi
 exit 1
