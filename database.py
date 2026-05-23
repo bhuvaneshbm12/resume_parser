@@ -114,3 +114,44 @@ async def init_db() -> None:
             ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
             """
         )
+
+        for column_name in (
+            "phone",
+            "location",
+            "linkedin",
+            "github",
+            "summary",
+            "target_role",
+            "years_experience",
+            "ats_keyword_match_score",
+            "experience_level",
+            "domain_classification",
+        ):
+            await connection.execute(
+                f"""
+                ALTER TABLE parsed_fields
+                ADD COLUMN IF NOT EXISTS {column_name} TEXT NOT NULL DEFAULT ''
+                """
+            )
+
+        for column_name in (
+            "projects",
+            "certifications",
+            "awards",
+            "languages",
+            "identity",
+            "education_history",
+            "skills_grouped",
+            "positions_of_responsibility",
+            "extracurriculars",
+            "missing_fields",
+            "contact_card",
+            "role_timeline",
+            "parser_flags",
+        ):
+            await connection.execute(
+                f"""
+                ALTER TABLE parsed_fields
+                ADD COLUMN IF NOT EXISTS {column_name} JSONB NOT NULL DEFAULT '[]'::jsonb
+                """
+            )

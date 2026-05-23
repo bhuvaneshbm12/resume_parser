@@ -375,6 +375,15 @@ Recent final-submission updates:
 - Railway deployment uses `Procfile` to separate `web` and `worker` commands. `railway.json` intentionally does not set a global `startCommand`, so the worker does not start Uvicorn.
 - Railway worker concurrency is capped with `CELERY_CONCURRENCY`, defaulting to 1 in `workers/celery_config.py`; set `CELERY_CONCURRENCY=1` in Railway to avoid high prefork concurrency.
 
+Recent ATS parser updates:
+- `ParsedResume` now models an ATS-style parser output, including identity, education history, grouped skills, projects with tools/metrics, certifications, positions of responsibility, extra-curriculars, parser analysis, contact card, timeline, and parser flags.
+- `parsed_fields` now has additional JSONB/text columns for the ATS parser fields. `database.py` creates these columns on startup with `ALTER TABLE ... ADD COLUMN IF NOT EXISTS`.
+- `workers/tasks.py` prompt and `test_llm.py` prompt must stay synchronized. The Gemini prompt asks for structured ATS output and no markdown.
+- `normalize_resume_payload()` is intentionally defensive. Gemini often returns numbers, booleans, strings, `null`, or objects where the Pydantic schema expects strings/lists/dicts; normalization coerces those shapes before validation.
+- Gemini `503 UNAVAILABLE` is wrapped as `gemini.ServerError` and included in Celery autoretry alongside rate limit and timeout compatibility errors.
+- `frontend/components/ResultsDisplay.tsx` renders the ATS parser sections but intentionally does not show `Missing Fields & Flags` in the UI. The visible card includes parser analysis, timeline, identity, education history, grouped skills, experience, education, projects, positions of responsibility, certifications, awards, languages, extra-curriculars, and download JSON.
+- If UI changes do not show on `localhost:3000`, rebuild the frontend container with `docker compose up -d --build frontend`; the frontend service is image-based and does not live-reload local edits.
+
 ## Docker Compose Notes
 
 Redis healthcheck should stay in exec form:
