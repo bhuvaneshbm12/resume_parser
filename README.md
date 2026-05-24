@@ -187,3 +187,5 @@ worker: celery -A workers.tasks worker --loglevel=info --concurrency=${CELERY_CO
 - There is no user authentication or upload history UI.
 - CORS defaults to `*`; set `ALLOWED_ORIGINS` before public deployment.
 - The app uses startup DDL instead of migrations.
+ 
+ Created pr
